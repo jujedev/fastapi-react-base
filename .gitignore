@@ -1,0 +1,38 @@
+# Python
+backend/venv/
+backend/.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Entornos — NUNCA al repo
+backend/.env
+frontend/.env
+frontend/.env.production
+
+# Sí subir — son plantillas sin credenciales
+!backend/.env.example
+!frontend/.env.example
+!frontend/.env.development
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.log
+
+# Yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VSCode
+.vscode/
