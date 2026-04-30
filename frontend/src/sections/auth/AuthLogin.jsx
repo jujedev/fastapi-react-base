@@ -32,11 +32,12 @@ import { api } from '../../api/client';
 import EyeOutlined from '@ant-design/icons/EyeOutlined';
 import EyeInvisibleOutlined from '@ant-design/icons/EyeInvisibleOutlined';
 
+// TODO: cambiar la ruta de redirección post-login según el proyecto
+const POST_LOGIN_ROUTE = '/dashboard';
+
 function TransitionRight(props) {
   return <Slide {...props} direction="left" />;
 }
-
-// ============================|| JWT - LOGIN ||============================ //
 
 export default function AuthLogin() {
   const navigate = useNavigate();
@@ -67,12 +68,11 @@ export default function AuthLogin() {
               password: values.password
             });
 
-            // Guardar tokens — igual que antes, compatible con tu client.js
             localStorage.setItem('accessToken', res.data.accessToken);
             localStorage.setItem('refreshToken', res.data.refreshToken);
 
             setSuccessOpen(true);
-            setTimeout(() => navigate('/ventas'), 1000);
+            setTimeout(() => navigate(POST_LOGIN_ROUTE), 1000);
           } catch (err) {
             const msg = err.response?.data?.detail || 'Error al iniciar sesión';
             setSnackbarMessage(msg);
@@ -85,8 +85,6 @@ export default function AuthLogin() {
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit}>
             <Grid container spacing={3}>
-
-              {/* EMAIL */}
               <Grid size={12}>
                 <Stack sx={{ gap: 1 }}>
                   <InputLabel htmlFor="email-login">Email</InputLabel>
@@ -107,7 +105,6 @@ export default function AuthLogin() {
                 )}
               </Grid>
 
-              {/* PASSWORD */}
               <Grid size={12}>
                 <Stack sx={{ gap: 1 }}>
                   <InputLabel htmlFor="password-login">Contraseña</InputLabel>
@@ -141,7 +138,6 @@ export default function AuthLogin() {
                 )}
               </Grid>
 
-              {/* KEEP ME SIGN IN */}
               <Grid sx={{ mt: -1 }} size={12}>
                 <Stack direction="row" sx={{ gap: 2, alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <FormControlLabel
@@ -162,48 +158,27 @@ export default function AuthLogin() {
                 </Stack>
               </Grid>
 
-              {/* BOTÓN */}
               <Grid size={12}>
                 <AnimateButton>
-                  <Button
-                    fullWidth
-                    type="submit"
-                    size="large"
-                    variant="contained"
-                    color="primary"
-                    disabled={isSubmitting}
-                  >
+                  <Button fullWidth type="submit" size="large" variant="contained" color="primary" disabled={isSubmitting}>
                     {isSubmitting ? 'Ingresando...' : 'Ingresar'}
                   </Button>
                 </AnimateButton>
               </Grid>
-
             </Grid>
           </form>
         )}
       </Formik>
 
-      {/* ERROR */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3500}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        TransitionComponent={TransitionRight}
-      >
+      <Snackbar open={snackbarOpen} autoHideDuration={3500} onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} TransitionComponent={TransitionRight}>
         <Alert onClose={() => setSnackbarOpen(false)} severity="error" sx={{ width: '100%' }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
 
-      {/* ÉXITO */}
-      <Snackbar
-        open={successOpen}
-        autoHideDuration={1500}
-        onClose={() => setSuccessOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        TransitionComponent={TransitionRight}
-      >
+      <Snackbar open={successOpen} autoHideDuration={1500} onClose={() => setSuccessOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} TransitionComponent={TransitionRight}>
         <Alert onClose={() => setSuccessOpen(false)} severity="success" sx={{ width: '100%' }}>
           ¡Bienvenido! Redirigiendo...
         </Alert>

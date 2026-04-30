@@ -13,11 +13,6 @@ const Color      = Loadable(lazy(() => import('pages/component-overview/color'))
 const Typography = Loadable(lazy(() => import('pages/component-overview/typography')));
 const Shadow     = Loadable(lazy(() => import('pages/component-overview/shadows')));
 
-// Devices
-const Devices      = Loadable(lazy(() => import('pages/devices/devices')));
-const AddDevice    = Loadable(lazy(() => import('pages/devices/addDevice')));
-const ConfigDevice = Loadable(lazy(() => import('pages/devices/configDevice')));
-
 // Carnicería
 const Ventas       = Loadable(lazy(() => import('pages/carniceria/Ventas')));
 const Historial    = Loadable(lazy(() => import('pages/carniceria/Historial')));
@@ -41,11 +36,6 @@ const MainRoutes = {
       children: [
         //{ index: true,               element: <DashboardDefault /> },
         //{ path: 'dashboard',         element: <DashboardDefault /> },
-
-        // Devices
-        { path: 'devices',           element: <Devices /> },
-        { path: 'addDevice',         element: <AddDevice /> },
-        { path: 'configDevice/:id',  element: <ConfigDevice /> },
 
         // Carnicería
         { path: 'ventas',            element: <Ventas /> },

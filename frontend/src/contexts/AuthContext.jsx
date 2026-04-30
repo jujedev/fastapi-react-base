@@ -48,7 +48,6 @@ export const AuthProvider = ({ children }) => {
     const handler = () => {
       if (!document.hidden) loadUser();
     };
-
     document.addEventListener("visibilitychange", handler);
     return () => document.removeEventListener("visibilitychange", handler);
   }, []);
@@ -60,5 +59,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook para usar el AuthContext
 export const useAuth = () => useContext(AuthContext);

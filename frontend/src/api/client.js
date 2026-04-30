@@ -29,10 +29,10 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch {
-        // Refresh falló — limpiar tokens y mandar al login
+        // Refresh falló — limpiar tokens y redirigir al login
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/login";  // ← redirige al login automáticamente
+        window.location.href = "/login";
       }
     }
 
