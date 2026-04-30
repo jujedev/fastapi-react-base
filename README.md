@@ -49,8 +49,8 @@ JWT_REFRESH_SECRET_KEY= # python -c "import secrets; print(secrets.token_hex(32)
 ### 2. Backend
 
 ```bash
-cd backend
-python -m venv venv
+cd app
+py -3.11 -m venv venv
 venv\Scripts\activate        # Windows
 source venv/bin/activate     # Linux/Mac
 pip install -r requirements.txt
