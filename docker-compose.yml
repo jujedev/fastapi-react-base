@@ -1,0 +1,4 @@
+# Alias raíz — delega al compose de producción en docker/
+# Uso: docker compose up -d --build
+include:
+  - docker/docker-compose.yml

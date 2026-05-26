@@ -1,7 +1,6 @@
 from sqlmodel import SQLModel, create_engine, Session
-from app.core.config import get_settings
+from .config import settings
 
-settings = get_settings()
 
 engine = create_engine(
     settings.DATABASE_URL,
@@ -13,10 +12,6 @@ engine = create_engine(
 
 
 def create_db_and_tables():
-    # Importar todos los modelos antes de crear tablas
-    from app.models.usuario import Usuario  # noqa: F401
-    # TODO: agregar los modelos del proyecto acá
-    # from app.models.mi_modelo import MiModelo  # noqa: F401
     SQLModel.metadata.create_all(engine)
 
 

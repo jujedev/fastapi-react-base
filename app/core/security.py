@@ -4,14 +4,12 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from app.core.config import get_settings
-
-settings = get_settings()
+from .config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# ─── Passwords ───────────────────────────────────────────────────────────────
+# ── Password ──────────────────────────────────────────────
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -20,8 +18,7 @@ def hash_password(password: str) -> str:
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
-
-# ─── Tokens ──────────────────────────────────────────────────────────────────
+# ── JWT ───────────────────────────────────────────────────
 
 def _create_token(data: dict, secret: str, expires_delta: timedelta) -> str:
     payload = data.copy()
@@ -54,6 +51,11 @@ def decode_access_token(token: str) -> Optional[dict]:
 
 def decode_refresh_token(token: str) -> Optional[dict]:
     try:
-        return jwt.decode(token, settings.JWT_REFRESH_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(
+            token, settings.JWT_REFRESH_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
+        if payload.get("type") != "refresh":
+            return None
+        return payload
     except JWTError:
         return None

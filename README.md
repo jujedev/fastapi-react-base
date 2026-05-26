@@ -1,118 +1,192 @@
-# 🧱 fastapi-react-base
+# 🚀 fastapi-react-base
 
-Template base con autenticación JWT lista para usar.
-Stack: FastAPI + SQLModel + PostgreSQL | React + Vite + Material UI (Mantis)
+Template base reutilizable con autenticación JWT completa, lista para extender con lógica de negocio.
 
-## Estructura
+---
+
+## 🛠️ Stack
+
+| Capa          | Tecnología                       |
+| ------------- | -------------------------------- |
+| Backend       | Python 3.11 + FastAPI            |
+| ORM           | SQLModel (SQLAlchemy + Pydantic) |
+| Base de datos | PostgreSQL 16                    |
+| Migraciones   | Alembic                          |
+| Autenticación | JWT (access + refresh token)     |
+| Rate limiting | SlowAPI                          |
+| Frontend      | React + Vite + Material UI       |
+| Servidor web  | Nginx                            |
+| Contenedores  | Docker + Docker Compose          |
+
+---
+
+## 📁 Estructura
 
 ```
-├── backend/
+fastapi-react-base/
+├── app/
 │   ├── core/
-│   │   ├── config.py          # Settings + variables JWT
-│   │   ├── database.py        # Engine + sesión
-│   │   ├── security.py        # Hash passwords + JWT tokens
-│   │   └── dependencies.py    # get_current_user, require_admin
+│   │   ├── config.py           # Settings con Pydantic BaseSettings
+│   │   ├── database.py         # Sesión SQLModel / PostgreSQL
+│   │   ├── dependencies.py     # get_session, get_current_user, require_admin
+│   │   └── security.py         # JWT, hashing de passwords
 │   ├── models/
-│   │   └── usuario.py         # Modelo Usuario con roles
-│   ├── api/
-│   │   └── auth.py            # /login /refresh /me /register
-│   ├── main.py
-│   ├── requirements.txt
-│   └── .env.example
-└── frontend/
-    └── src/
-        ├── api/client.js              # Axios + interceptores
-        ├── contexts/AuthContext.jsx   # Estado global del usuario
-        ├── routes/
-        │   ├── ProtectedRoute.jsx
-        │   └── LoginRoutes.jsx
-        └── sections/auth/
-            └── AuthLogin.jsx
+│   │   └── usuario.py          # Usuario con roles ADMIN / USER
+│   ├── routers/
+│   │   └── auth.py             # login, refresh, me, setup, change-password
+│   ├── alembic/                # Migraciones
+│   ├── main.py                 # CORS, rate limiter, lifespan, routers
+│   ├── .env.example
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── client.js       # Axios + interceptores JWT automáticos
+│   │   ├── contexts/
+│   │   │   └── AuthContext.jsx
+│   │   ├── pages/
+│   │   │   └── auth/
+│   │   │       └── Login.jsx
+│   │   ├── routes/
+│   │   │   ├── MainRoutes.jsx
+│   │   │   └── ProtectedRoute.jsx
+│   │   ├── menu-items/
+│   │   │   └── index.js        # Estructura de menú lateral vacía
+│   │   ├── Layout.jsx          # Drawer + AppBar + notificaciones
+│   │   └── App.jsx
+│   ├── .env.development.example
+│   └── package.json
+├── docker/
+│   ├── backend/Dockerfile
+│   ├── frontend/
+│   │   ├── Dockerfile
+│   │   └── nginx.conf
+│   ├── docker-compose.yml      # Producción
+│   └── docker-compose.dev.yml  # Solo DB en Docker
+├── docker-compose.yml          # Raíz — apunta al de docker/
+└── deploy.sh
 ```
 
-## Inicio rápido
+---
 
-### 1. Clonar y configurar
+## ⚙️ Setup local
 
-```bash
-# Copiar variables de entorno
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.development
-
-# Editar backend/.env con tus valores
-APP_NAME="Nombre de tu app"
-DATABASE_URL=postgresql://postgres:tu_pass@localhost:5432/nombre_db
-JWT_SECRET_KEY=         # python -c "import secrets; print(secrets.token_hex(32))"
-JWT_REFRESH_SECRET_KEY= # python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-### 2. Backend
+### Backend
 
 ```bash
 cd app
-py -3.11 -m venv venv
-venv\Scripts\activate        # Windows
-source venv/bin/activate     # Linux/Mac
+python -m venv .venv
+source .venv/bin/activate        # Linux/Mac
+.\.venv\Scripts\activate         # Windows
+
 pip install -r requirements.txt
-uvicorn backend.main:app --reload
+
+cp .env.example .env
+# Editar .env con tus valores
+
+# Correr migraciones
+alembic upgrade head
+
+uvicorn main:app --reload
 ```
 
-### 3. Frontend
+API: `http://localhost:8000`  
+Docs: `http://localhost:8000/docs`
+
+### Frontend
 
 ```bash
 cd frontend
-yarn install
-yarn dev
+npm install
+cp .env.development.example .env.development
+npm run dev
 ```
 
-### 4. Crear el primer usuario admin
+Frontend: `http://localhost:3000`
 
-```
-POST http://localhost:8000/auth/register
-{
-  "email": "admin@miapp.com",
-  "nombre": "Administrador",
-  "password": "tu-password",
-  "rol": "admin"
-}
+### Solo la DB en Docker (recomendado)
+
+```bash
+docker compose -f docker/docker-compose.dev.yml up -d
 ```
 
-⚠️ Una vez creado el primer admin, proteger `/auth/register` con `require_admin` en `backend/api/auth.py`.
+---
 
-## Checklist para un proyecto nuevo
+## 🔑 Variables de entorno
 
-- [ ] Cambiar `APP_NAME` en `.env`
-- [ ] Cambiar `DATABASE_URL` con el nombre de la nueva DB
-- [ ] Generar nuevos `JWT_SECRET_KEY` y `JWT_REFRESH_SECRET_KEY`
-- [ ] Agregar modelos del proyecto en `backend/models/`
-- [ ] Registrar modelos en `backend/core/database.py`
-- [ ] Agregar routers en `backend/main.py`
-- [ ] Cambiar `POST_LOGIN_ROUTE` en `AuthLogin.jsx` si la ruta inicial no es `/dashboard`
-- [ ] Crear el primer usuario admin desde Swagger (`/docs`)
-- [ ] Proteger `/auth/register` con `require_admin` antes de producción
+### Backend (`app/.env`)
 
-## Endpoints de auth
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=tu_password
+DB_NAME=app_db
 
-| Método | Endpoint | Auth | Descripción |
-|--------|----------|------|-------------|
-| POST | `/auth/login` | No | Login con email y password |
-| POST | `/auth/refresh` | No | Renovar access token |
-| GET | `/auth/me` | Sí | Usuario actual |
-| POST | `/auth/register` | No* | Crear usuario |
+JWT_SECRET_KEY=cambia_esta_clave_secreta_larga
+JWT_REFRESH_SECRET_KEY=otra_clave_secreta_larga
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
 
-*Proteger con `require_admin` en producción
-
-## Roles disponibles
-
-| Rol | Descripción |
-|-----|-------------|
-| `admin` | Acceso total |
-| `cajero` | Acceso básico |
-
-Para agregar roles: editar `RolUsuario` en `backend/models/usuario.py`
-
-## Dependencia crítica
-
+APP_NAME=Mi App
+DEBUG=True
 ```
-bcrypt==4.0.1  ← NO actualizar, versiones superiores rompen passlib
+
+### Frontend (`frontend/.env.development`)
+
+```env
+VITE_API_URL=http://localhost:8000
+VITE_APP_BASE_NAME=/
 ```
+
+---
+
+## 🚀 Deploy con Docker
+
+```bash
+cp app/.env.example app/.env
+# Editar app/.env con valores de producción
+
+docker compose up -d --build
+docker compose logs -f
+```
+
+---
+
+## 🔒 Autenticación
+
+- **Access token** — 60 min, enviado en cada request como `Bearer`
+- **Refresh token** — 7 días, renueva el access token automáticamente
+- El interceptor de Axios maneja el refresh transparentemente
+
+### Endpoints disponibles
+
+| Método | Ruta                        | Descripción                        |
+| ------ | --------------------------- | ---------------------------------- |
+| POST   | `/auth/login`               | Login con usuario y contraseña     |
+| POST   | `/auth/refresh`             | Renovar access token               |
+| GET    | `/auth/me`                  | Datos del usuario autenticado      |
+| POST   | `/auth/setup`               | Crear primer admin (solo si DB vacía) |
+| PUT    | `/auth/change-password`     | Cambiar contraseña propia          |
+
+---
+
+## 👥 Roles
+
+| Rol     | Descripción                    |
+| ------- | ------------------------------ |
+| `ADMIN` | Acceso total                   |
+| `USER`  | Acceso estándar                |
+
+Extendible en `models/usuario.py` → enum `RolUsuario`.
+
+---
+
+## 📌 Cómo extender el template
+
+1. Agregar modelos en `app/models/`
+2. Agregar routers en `app/routers/` e incluirlos en `main.py`
+3. Crear migración: `alembic revision --autogenerate -m "descripcion"`
+4. Agregar páginas en `frontend/src/pages/`
+5. Agregar items al menú en `frontend/src/menu-items/index.js`

@@ -1,44 +1,68 @@
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlmodel import Session
+from fastapi.security import OAuth2PasswordBearer
+from sqlmodel import Session, select
 
-from app.core.database import get_session
-from app.core.security import decode_access_token
-from app.models.usuario import Usuario
+from .database import get_session
+from .security import decode_access_token
+from models.usuario import Usuario, RolUsuario
 
-bearer_scheme = HTTPBearer()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+# Tipos reutilizables
+SessionDep = Annotated[Session, Depends(get_session)]
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    session: Session = Depends(get_session),
+    token: str = Depends(oauth2_scheme),
+    session: SessionDep = None,
 ) -> Usuario:
-    token = credentials.credentials
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="No se pudo validar las credenciales",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
     payload = decode_access_token(token)
+    if payload is None:
+        raise credentials_exception
 
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido o expirado",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise credentials_exception
 
-    user_id = int(payload.get("sub"))
-    usuario = session.get(Usuario, user_id)
-
-    if not usuario or not usuario.activo:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario no encontrado o inactivo",
-        )
+    usuario = session.get(Usuario, int(user_id))
+    if usuario is None or not usuario.activo:
+        raise credentials_exception
 
     return usuario
 
 
-def require_admin(current_user: Usuario = Depends(get_current_user)) -> Usuario:
-    if current_user.rol != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere rol de administrador",
-        )
-    return current_user
+CurrentUser = Annotated[Usuario, Depends(get_current_user)]
+
+
+# ── Control de roles ──────────────────────────────────────
+
+def require_rol(*roles: RolUsuario):
+    """
+    Factory de dependencia para restringir acceso por rol.
+
+    Uso en un router:
+        @router.delete("/{id}")
+        def eliminar(id: int, _=Depends(require_rol(RolUsuario.ADMIN))):
+            ...
+
+        @router.get("/reporte")
+        def reporte(_=Depends(require_rol(RolUsuario.ADMIN, RolUsuario.USER))):
+            ...
+    """
+    def checker(current_user: CurrentUser) -> Usuario:
+        if current_user.rol not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Roles requeridos: {[r.value for r in roles]}",
+            )
+        return current_user
+    return checker
